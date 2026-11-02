@@ -1,0 +1,129 @@
+// SPDX-License-Identifier: GPL-2.0-only
+
+/dts-v1/;
+
+#include "sdm845-google-common.dtsi"
+
+/ {
+	model = "Google Pixel 3 XL";
+	compatible = "google,crosshatch", "qcom,sdm845";
+};
+
+&battery {
+	charge-full-design-microamp-hours = <3480000>;
+	voltage-min-design-microvolt = <3600000>;
+	voltage-max-design-microvolt = <4400000>;
+};
+
+&framebuffer0 {
+	width = <1440>;
+	height = <2960>;
+	stride = <(1440 * 4)>;
+};
+
+&i2c2 {
+	clock-frequency = <400000>;
+
+	status = "okay";
+
+	touchscreen@48 {
+		compatible = "samsung,s6sy761";
+		reg = <0x48>;
+
+		interrupts-extended = <&tlmm 125 IRQ_TYPE_LEVEL_LOW>;
+
+		reset-gpios = <&tlmm 99 GPIO_ACTIVE_LOW>;
+		mode-switch-gpios = <&tlmm 136 GPIO_ACTIVE_HIGH>;
+
+		avdd-supply = <&vreg_l19a_3p3>;
+		vdd-supply = <&vreg_l14a_1p8>;
+
+		pinctrl-0 = <&touchscreen_default>;
+		pinctrl-names = "default";
+	};
+};
+
+&ibb {
+	regulator-min-microvolt = <4600000>;
+	regulator-max-microvolt = <6000000>;
+	regulator-over-current-protection;
+	regulator-pull-down;
+	regulator-soft-start;
+
+	qcom,discharge-resistor-kohms = <300>;
+};
+
+&lab {
+	regulator-min-microvolt = <4600000>;
+	regulator-max-microvolt = <6000000>;
+	regulator-soft-start;
+	regulator-pull-down;
+};
+
+&mdss_dsi0 {
+	vdda-supply = <&vdda_mipi_dsi0_1p2>;
+
+	status = "okay";
+
+	panel@0 {
+		compatible = "samsung,s6e3ha8-amb630qy01";
+		reg = <0>;
+
+		vdd3-supply = <&vreg_l14a_1p8>;
+		vci-supply = <&vreg_l28a_3p0>;
+		vddpos-supply = <&lab>;
+		vddneg-supply = <&ibb>;
+
+		reset-gpios = <&tlmm 6 GPIO_ACTIVE_HIGH>;
+
+		pinctrl-0 = <&panel_default>;
+		pinctrl-names = "default";
+
+		port {
+			panel_in: endpoint {
+				remote-endpoint = <&mdss_dsi0_out>;
+			};
+		};
+	};
+};
+
+&mdss_dsi0_out {
+	data-lanes = <0 1 2 3>;
+	remote-endpoint = <&panel_in>;
+	qcom,te-source = "mdp_vsync_e";
+};
+
+&mdss_dsi0_phy {
+	vdds-supply = <&vdda_mipi_dsi0_pll>;
+
+	status = "okay";
+};
+
+&tlmm {
+	panel_default: panel-default-state {
+		reset-pins {
+			pins = "gpio6";
+			function = "gpio";
+			drive-strength = <8>;
+			bias-disable;
+		};
+
+		te-pins {
+			pins = "gpio12";
+			function = "mdp_vsync";
+			drive-strength = <2>;
+			bias-pull-down;
+		};
+	};
+};
+
+&wireless_charger {
+	idt,fod-bpp = /bits/ 8 <0xa4 0x2a 0x86 0x36 0x84 0x3d
+				0x9a 0x14 0x9d 0x0b 0x85 0x6f>;
+	idt,fod-epp = /bits/ 8 <0xb0 0x24 0x90 0x42 0x88 0x52
+				0x88 0x53 0x91 0x36 0x9c 0xf0>;
+};
+
+&wifi {
+	qcom,calibration-variant = "Google_crosshatch";
+};
